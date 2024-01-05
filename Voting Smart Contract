@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity >=0.7.0 <0.9.0;
+
+contract Voting {
+    mapping(address => bool) public voters;
+    mapping(bytes32 => uint256) public votesReceived;
+
+    bytes32[] public candidateList;
+
+    event Voted(address indexed voter, bytes32 candidate);
+
+    function addCandidate(bytes32 _candidate) external {
+        require(!voters[msg.sender], "Voters cannot add candidates");
+        require(!validCandidate(_candidate), "Candidate already exists");
+
+        candidateList.push(_candidate);
+    }
+
+    function vote(bytes32 _candidate) external {
+        require(!voters[msg.sender], "You have already voted");
+        require(validCandidate(_candidate), "Not a valid candidate");
+
+        votesReceived[_candidate]++;
+        voters[msg.sender] = true;
+
+        emit Voted(msg.sender, _candidate);
+    }
+
+    function totalVotesFor(bytes32 _candidate) external view returns (uint256) {
+        require(validCandidate(_candidate), "Not a valid candidate");
+        return votesReceived[_candidate];
+    }
+
+    function validCandidate(bytes32 _candidate) internal view returns (bool) {
+        for (uint256 i = 0; i < candidateList.length; i++) {
+            if (candidateList[i] == _candidate) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
